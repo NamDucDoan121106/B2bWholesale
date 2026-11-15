@@ -1,0 +1,65 @@
+@model MyOrdersViewModel
+@{
+    ViewData["Title"] = "My orders";
+    var statuses = new[] { "" }.Concat(OrderStatuses.All);
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 page-title mb-0"><i class="bi bi-receipt me-1"></i>My orders</h1>
+    <a asp-action="Create" class="btn btn-portal"><i class="bi bi-cart-plus me-1"></i>New order</a>
+</div>
+
+<ul class="nav nav-pills mb-3 flex-wrap gap-1">
+    @foreach (var s in statuses)
+    {
+        var active = (Model.Status ?? "") == s ? "active" : "";
+        <li class="nav-item">
+            <a class="nav-link @active" asp-action="Index" asp-route-status="@(s == "" ? null : s)">@(s == "" ? "All" : s)</a>
+        </li>
+    }
+</ul>
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Orders.Count == 0)
+        {
+            <div class="text-center text-muted py-4">No orders found.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle js-datatable w-100" data-order='[[1,"desc"]]'>
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order #</th>
+                            <th>Order date</th>
+                            <th>Status</th>
+                            <th class="text-end">Lines</th>
+                            <th class="text-end">Units</th>
+                            <th class="text-end">Total</th>
+                            <th class="no-sort text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var o in Model.Orders)
+                    {
+                        <tr>
+                            <td class="fw-semibold">#@o.OrderID</td>
+                            <td data-order="@o.OrderDate.ToString("yyyyMMddHHmm")">@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><partial name="_StatusBadge" model="o.OrderStatus" /></td>
+                            <td class="text-end">@o.LineCount</td>
+                            <td class="text-end">@o.Units.ToString("N0")</td>
+                            <td class="text-end" data-order="@o.Total.ToString(System.Globalization.CultureInfo.InvariantCulture)">@StatusUi.Money(o.Total)</td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Details" asp-route-id="@o.OrderID" class="btn btn-sm btn-outline-primary" title="Details"><i class="bi bi-eye"></i></a>
+                                <a asp-action="Invoice" asp-route-id="@o.OrderID" target="_blank" class="btn btn-sm btn-outline-success" title="Printable invoice">
+                                    <i class="bi bi-printer"></i> Invoice
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

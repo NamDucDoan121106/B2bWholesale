@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "Access denied";
+}
+<div class="text-center py-5">
+    <i class="bi bi-shield-lock display-1 text-danger"></i>
+    <h1 class="h3 mt-3">Access denied</h1>
+    <p class="text-muted">The Agent Portal is only available to accounts with the <strong>Agent</strong> role.</p>
+    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+        <button class="btn btn-portal"><i class="bi bi-box-arrow-right me-1"></i>Sign in with another account</button>
+    </form>
+</div>

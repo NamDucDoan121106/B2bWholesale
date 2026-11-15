@@ -1,0 +1,111 @@
+@model CreateOrderViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "New order";
+    var catalogJson = JsonSerializer.Serialize(Model.Catalog.Select(i => new
+    {
+        id = i.ItemID, name = i.ItemName, size = i.Size, price = i.Price, stock = i.StockQuantity
+    }));
+    var linesJson = JsonSerializer.Serialize(Model.Lines.Select(l => new { itemId = l.ItemId, qty = l.Quantity }));
+}
+
+<h1 class="h3 page-title mb-3"><i class="bi bi-cart-plus me-1"></i>New wholesale order</h1>
+
+<form asp-action="Create" method="post" id="orderForm" novalidate>
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- MASTER -->
+            <div class="card mb-4">
+                <div class="card-header"><i class="bi bi-building me-1"></i>Order header</div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6">
+                        <div class="small text-muted">Agent (bill &amp; ship to)</div>
+                        <div class="fw-semibold">@Model.AgentName</div>
+                        <div class="small">@Model.AgentAddress</div>
+                        <div class="small"><i class="bi bi-telephone me-1"></i>@Model.AgentPhone</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small text-muted">Order date</div>
+                        <div class="fw-semibold">@DateTime.Now.ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small text-muted">Initial status</div>
+                        <partial name="_StatusBadge" model="OrderStatuses.Pending" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETAIL -->
+            <div class="card">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <span><i class="bi bi-list-ol me-1"></i>Order lines</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="addLine"><i class="bi bi-plus-lg me-1"></i>Add line</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0" id="lineTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:40px">#</th>
+                                    <th>Item</th>
+                                    <th class="text-end" style="width:140px">Unit price</th>
+                                    <th style="width:130px">Quantity</th>
+                                    <th class="text-end" style="width:150px">Line total</th>
+                                    <th style="width:50px"></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div id="emptyHint" class="p-4 text-center text-muted">
+                        <i class="bi bi-cart display-6 d-block mb-2"></i>No lines yet - click <strong>Add line</strong> to start.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card sticky-summary">
+                <div class="card-header"><i class="bi bi-calculator me-1"></i>Summary</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Lines</span><span id="sumLines">0</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span class="text-muted">Total units</span><span id="sumUnits">0</span></div>
+                    <hr />
+                    <div class="d-flex justify-content-between fs-5 fw-bold"><span>Order total</span><span id="sumTotal" class="text-portal">0 ₫</span></div>
+                    <div class="small text-muted mt-1">Prices exclude VAT. Stock is reserved as soon as the order is placed.</div>
+                    <div id="stockWarn" class="alert alert-warning small mt-3 d-none mb-0"></div>
+                    <button type="submit" class="btn btn-portal w-100 mt-3 py-2" id="submitBtn" disabled>
+                        <i class="bi bi-send-check me-1"></i>Place order
+                    </button>
+                    <a asp-controller="Catalog" asp-action="Index" class="btn btn-link w-100 mt-1">Back to catalog</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<template id="lineTemplate">
+    <tr>
+        <td class="line-no text-muted"></td>
+        <td>
+            <select class="form-select item-select" data-field="ItemId" required>
+                <option value="">-- choose item --</option>
+            </select>
+            <div class="small text-muted mt-1 stock-info"></div>
+        </td>
+        <td class="text-end unit-price">-</td>
+        <td><input type="number" class="form-control qty-input" data-field="Quantity" min="1" max="10000" value="1" required /></td>
+        <td class="text-end fw-semibold line-total">-</td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger remove-line" title="Remove"><i class="bi bi-trash"></i></button></td>
+    </tr>
+</template>
+
+@section Scripts {
+    <script>
+        window.orderCatalog = @Html.Raw(catalogJson);
+        window.orderInitialLines = @Html.Raw(linesJson);
+    </script>
+    <script src="~/js/order-create.js" asp-append-version="true"></script>
+}

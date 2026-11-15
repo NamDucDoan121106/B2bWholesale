@@ -1,0 +1,17 @@
+# Visual Studio
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Unit Testing
+TestResults/
+*.trx
+
+# Local configuration
+*.user.config
+appsettings.Development.json
+
+# Temporary project (if unused)
+ConsoleApp1/

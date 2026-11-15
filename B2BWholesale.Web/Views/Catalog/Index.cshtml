@@ -1,0 +1,65 @@
+@model CatalogViewModel
+@{
+    ViewData["Title"] = "Catalog";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h1 class="h3 page-title mb-0"><i class="bi bi-grid-3x3-gap me-1"></i>Product catalog</h1>
+        <div class="text-muted">@Model.Items.Count items &middot; wholesale prices in VND</div>
+    </div>
+    <a asp-controller="Orders" asp-action="Create" class="btn btn-portal"><i class="bi bi-cart-plus me-1"></i>Build an order</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle js-datatable w-100" data-page-length="10" data-order='[[1,"asc"]]'>
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Item</th>
+                        <th>Packing / size</th>
+                        <th class="text-end">Unit price</th>
+                        <th class="text-end">In stock</th>
+                        <th>Availability</th>
+                        <th class="no-sort text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var i in Model.Items)
+                {
+                    <tr>
+                        <td>@i.ItemID</td>
+                        <td class="fw-semibold">@i.ItemName</td>
+                        <td>@i.Size</td>
+                        <td class="text-end" data-order="@i.Price.ToString(System.Globalization.CultureInfo.InvariantCulture)">@StatusUi.Money(i.Price)</td>
+                        <td class="text-end" data-order="@i.StockQuantity">@i.StockQuantity.ToString("N0")</td>
+                        <td>
+                            @if (i.StockQuantity == 0)
+                            {
+                                <span class="badge text-bg-secondary"><i class="bi bi-x-circle me-1"></i>Out of stock</span>
+                            }
+                            else if (i.StockQuantity <= Model.LowStockThreshold)
+                            {
+                                <span class="badge text-bg-warning"><i class="bi bi-exclamation-triangle me-1"></i>Low stock</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Available</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            @if (i.StockQuantity > 0)
+                            {
+                                <a asp-controller="Orders" asp-action="Create" asp-route-itemId="@i.ItemID" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-cart-plus"></i> Order
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

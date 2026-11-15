@@ -1,0 +1,91 @@
+@model InvoiceViewModel
+@{
+    ViewData["Title"] = $"Invoice INV-{Model.Order.OrderID:D5}";
+    var o = Model.Order;
+}
+<div class="no-print d-flex justify-content-between align-items-center mb-3">
+    <a asp-action="Details" asp-route-id="@o.OrderID" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to order</a>
+    <div class="text-muted small d-none d-md-block">Tip: choose "Save as PDF" in the print dialog to get a PDF copy.</div>
+    <button type="button" class="btn btn-success" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print / Save PDF</button>
+</div>
+
+<div class="invoice-sheet">
+    <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-4">
+        <div>
+            <div class="h4 fw-bold text-portal mb-1"><i class="bi bi-boxes me-1"></i>B2B WHOLESALE DISTRIBUTION</div>
+            <div class="small">19 Nguyen Huu Tho, Tan Phong Ward, District 7, Ho Chi Minh City</div>
+            <div class="small">Tax code: 0312345678 &middot; Hotline 1900 6868 &middot; sales@b2bwholesale.vn</div>
+        </div>
+        <div class="text-end">
+            <div class="h3 fw-bold mb-1">INVOICE</div>
+            <div>No. <strong>INV-@o.OrderID.ToString("D5")</strong></div>
+            <div class="small">Issued: @DateTime.Now.ToString("dd/MM/yyyy")</div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-7">
+            <div class="text-uppercase small text-muted fw-semibold">Bill to</div>
+            <div class="fw-bold">@o.Agent?.AgentName</div>
+            <div>@o.Agent?.Address</div>
+            <div>Phone: @o.Agent?.Phone</div>
+            <div class="small text-muted">Agent ID: @o.AgentID</div>
+        </div>
+        <div class="col-5">
+            <table class="table table-sm table-borderless mb-0">
+                <tr><td class="text-muted">Order #</td><td class="text-end fw-semibold">@o.OrderID</td></tr>
+                <tr><td class="text-muted">Order date</td><td class="text-end">@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td></tr>
+                <tr><td class="text-muted">Status</td><td class="text-end">@o.OrderStatus</td></tr>
+                <tr><td class="text-muted">Payment terms</td><td class="text-end">Net 30 days</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th style="width:40px">#</th>
+                <th>Description</th>
+                <th>Packing</th>
+                <th class="text-end">Qty</th>
+                <th class="text-end">Unit price (₫)</th>
+                <th class="text-end">Amount (₫)</th>
+            </tr>
+        </thead>
+        <tbody>
+        @{ var n = 0; }
+        @foreach (var d in o.OrderDetails.OrderBy(x => x.ID))
+        {
+            n++;
+            <tr>
+                <td>@n</td>
+                <td>@d.Item?.ItemName</td>
+                <td>@d.Item?.Size</td>
+                <td class="text-end">@d.Quantity.ToString("N0")</td>
+                <td class="text-end">@StatusUi.Money(d.UnitAmount).Replace(" ₫", "")</td>
+                <td class="text-end">@StatusUi.Money(d.LineTotal).Replace(" ₫", "")</td>
+            </tr>
+        }
+        </tbody>
+        <tfoot>
+            <tr><td colspan="5" class="text-end">Subtotal</td><td class="text-end">@StatusUi.Money(Model.Subtotal)</td></tr>
+            <tr><td colspan="5" class="text-end">VAT (@((InvoiceViewModel.VatRate * 100).ToString("0"))%)</td><td class="text-end">@StatusUi.Money(Model.Vat)</td></tr>
+            <tr class="fw-bold fs-5"><td colspan="5" class="text-end">TOTAL</td><td class="text-end text-portal">@StatusUi.Money(Model.GrandTotal)</td></tr>
+        </tfoot>
+    </table>
+
+    @if (o.OrderStatus == OrderStatuses.Cancelled)
+    {
+        <div class="alert alert-danger text-center fw-bold">THIS ORDER WAS CANCELLED - INVOICE VOID</div>
+    }
+
+    <div class="small text-muted mb-5">
+        Bank transfer: Vietcombank &middot; A/C 0071 0012 34567 &middot; B2B Wholesale Distribution Co., Ltd.
+        Please quote <strong>INV-@o.OrderID.ToString("D5")</strong> as the payment reference.
+    </div>
+
+    <div class="row text-center pt-3">
+        <div class="col-6"><div class="fw-semibold">Buyer</div><div class="small text-muted">(signature, full name)</div><div style="height:70px"></div></div>
+        <div class="col-6"><div class="fw-semibold">Seller</div><div class="small text-muted">(signature, stamp)</div><div style="height:70px"></div></div>
+    </div>
+</div>
